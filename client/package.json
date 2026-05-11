@@ -1,0 +1,13 @@
+{
+  "name": "tfg-chat-client",
+  "version": "0.1.0",
+  "description": "Cliente TUI del TFG: chat E2EE con bulletin board en blockchain.",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81"
+  }
+}
