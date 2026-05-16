@@ -62,14 +62,13 @@ def index():
 @app.route('/addtx', methods=['POST'])
 def addtx():
     payload = request.get_json(silent=True) or {}
-    sender = payload.get('sender')
     to = payload.get('to')
     msg = payload.get('msg')
 
-    if not sender or not to or not msg:
+    if not to or not msg:
         return "Fields can't be empty", 400
     try:
-        tx = blockchain.new_transaction(sender, to, msg)
+        tx = blockchain.new_transaction(to, msg)
     except Exception as e:
         return f"Error adding new tx: {e}", 500
     return f"Added tx to the pool: {tx}", 200

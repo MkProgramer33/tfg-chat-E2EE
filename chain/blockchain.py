@@ -19,12 +19,12 @@ class Blockchain:
         if boot_node:
             self.add_peer(boot_node)
 
-    def new_transaction(self, sender, to, msg):
+    def new_transaction(self, to, msg):
         #balance = self.get_balance(sender)
         #if amount > balance:
         #    raise Exception("not enough balance", amount, balance)
 
-        tx = Transaction(sender, to, msg)
+        tx = Transaction(to, msg)
         self.mempool.append(tx)
         return tx
 
@@ -112,4 +112,4 @@ class Blockchain:
         guess = f'{last_block.proof}{proof}{last_block.hash}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         # TODO: Set variable difficulty
-        return guess_hash[:2] == "00"
+        return guess_hash[:2] == "000000"

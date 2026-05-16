@@ -2,8 +2,7 @@ import jsonpickle
 
 
 class Transaction:
-    def __init__(self, sender, to, msg):
-        self.sender = sender
+    def __init__(self, to, msg):
         self.to = to
         self.msg = msg
 
