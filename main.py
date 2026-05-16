@@ -3,6 +3,6 @@
 
 
 if __name__ == '__main__':
-    print("fucked up")
+    print("Que subnormal que eres")
 
 

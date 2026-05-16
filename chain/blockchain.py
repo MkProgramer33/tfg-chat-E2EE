@@ -9,6 +9,7 @@ import jsonpickle
 
 class Blockchain:
     def __init__(self, node_id, init_txs, host, boot_node=None):
+        self.lostToAnotherValidator = None
         self.node_id = node_id
         self.mempool = []
         self.host = host
@@ -23,6 +24,7 @@ class Blockchain:
         #balance = self.get_balance(sender)
         #if amount > balance:
         #    raise Exception("not enough balance", amount, balance)
+
 
         tx = Transaction(to, msg)
         self.mempool.append(tx)
@@ -76,24 +78,43 @@ class Blockchain:
         if not self.mempool:
             return None
 
+        self.lostToAnotherValidator = False
         proof = 0
-        while not self.is_valid_proof(self.blocks[-1], proof):
+        while not self.is_valid_proof(self.blocks[-1], proof) and not self.lostToAnotherValidator:
             proof = randint(0, 100000)
             time.sleep(0.05)
 
-        new_index = self.blocks[-1].index + 1
-        block = MsgBlock(new_index, self.node_id, proof, self.blocks[-1].hash, self.mempool)
+        if not self.lostToAnotherValidator:
+            new_index = self.blocks[-1].index + 1
+            block = MsgBlock(new_index, self.node_id, proof, self.blocks[-1].hash, self.mempool)
 
-        self.add_block(block)
-        self.mempool = []
+            self.add_block(block)
+            self.mempool = []
 
-        print("New block", block)
-        self.broadcast_block(block)
-        return block
+            print("New block", block)
+            self.proadcastBlockMined()
+            self.broadcast_block(block)
+            return block
+        else:
+            self.mempool = []
+            print("LOST TO ANOTHER VALIDATOR")
+            return None
+
+    def proadcastBlockMined(self):
+        url = ''
+        for peer in self.peerstore:
+            if peer != self.host:
+                url = f'http://{peer}/resolvemining'
+            try:
+                requests.get(url, timeout=5)
+            except Exception as e:
+                print("Error", e)
+
 
     def add_block(self, block):
         # TODO run more checks
         # TODO handle blocks out of order
+
         if self.blocks[-1].hash == block.prev_hash:
             self.blocks.append(block)
 
@@ -112,4 +133,17 @@ class Blockchain:
         guess = f'{last_block.proof}{proof}{last_block.hash}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         # TODO: Set variable difficulty
-        return guess_hash[:2] == "000000"
+        print(f"{guess_hash} and the result is {guess_hash[:1] == '0'} for the 00 PoW")
+        return guess_hash[:1] == "0"
+
+
+    def request_mempool(self):
+        for peer in self.peerstore:
+            if peer != self.host:
+                url = f'http://{peer}/getmempool'
+                try:
+                    result = requests.get(url, timeout=5)
+                    self.mempool = jsonpickle.decode(result.text)
+
+                except Exception as e:
+                    print("Error", e)

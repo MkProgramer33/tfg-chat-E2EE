@@ -27,6 +27,11 @@ def mining_loop():
         blockchain.mine()
         time.sleep(1)
 
+def request_mempool_loop():
+    while True:
+        blockchain.request_mempool()
+        time.sleep(3)
+
 
 def resolve_split_loop():
     while True:
@@ -44,6 +49,7 @@ if args.mine:
     Thread(target=mining_loop, daemon=True).start()
     Thread(target=resolve_split_loop, daemon=True).start()
     Thread(target=gossip_loop, daemon=True).start()
+    Thread(target=request_mempool_loop, daemon=True).start()
 
 Thread(target=app.run, args=('0.0.0.0', args.port)).start()
 
@@ -134,4 +140,9 @@ def mine():
 @app.route('/resolvesplit', methods=['GET'])
 def resolvesplit():
     blockchain.resolve_split()
+    return "Done", 200
+
+@app.route('/resolvemining', methods=['GET'])
+def resolveMining():
+    blockchain.lostToAnotherValidator = True
     return "Done", 200
