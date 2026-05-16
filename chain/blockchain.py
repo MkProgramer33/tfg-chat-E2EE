@@ -72,26 +72,23 @@ class Blockchain:
         self.peerstore.add(peer_host)
 
     def mine(self):
+        # Bulletin-board: only mine when there is something to publish.
+        if not self.mempool:
+            return None
+
         proof = 0
         while not self.is_valid_proof(self.blocks[-1], proof):
             proof = randint(0, 100000)
             time.sleep(0.05)
 
-        # once the proof is found, create new block with txs in the pool
         new_index = self.blocks[-1].index + 1
         block = MsgBlock(new_index, self.node_id, proof, self.blocks[-1].hash, self.mempool)
-
-        # add a reward for the miner
-        block.msg.append(Transaction('0', self.node_id, "Test message, this should be the next TODO"))
 
         self.add_block(block)
         self.mempool = []
 
         print("New block", block)
-
-        # broadcast block
         self.broadcast_block(block)
-
         return block
 
     def add_block(self, block):
@@ -101,12 +98,13 @@ class Blockchain:
             self.blocks.append(block)
 
     def broadcast_block(self, block):
+        payload = {'block': jsonpickle.encode(block)}
         for peer in self.peerstore:
             if peer == self.host:
                 continue
-            url = f'http://{peer}/addblock?block={jsonpickle.encode(block)}'
+            url = f'http://{peer}/addblock'
             try:
-                requests.get(url)
+                requests.post(url, json=payload, timeout=5)
             except Exception as e:
                 print("Error", e)
 
